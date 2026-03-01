@@ -12,35 +12,32 @@ import { z } from 'genkit';
 
 // Define the valid options for cluster, zone, and weight tags
 const ClusterEnum = z.enum([
-  'Introduction',
-  'Key Takeaways',
-  'Detailed Analysis',
-  'Conclusion',
-  'Examples',
-  'Quotes',
-  'Statistics',
-  'Methodology',
-  'Background',
-  'Future Outlook',
-  'Challenges',
-  'Solutions',
-  'Recommendations',
-  'Call to Action',
+  'betrayal',
+  'surveillance',
+  'resilience',
+  'tactical',
+  'systemic',
+  'connection',
 ]);
 
 const ZoneEnum = z.enum(['anchor', 'ticker', 'ghost']);
 
-const WeightEnum = z.enum(['critical', 'high', 'medium', 'low', 'optional']);
+const WeightEnum = z.union([
+  z.literal(0.5),
+  z.literal(1.0),
+  z.literal(1.5),
+  z.literal(2.0),
+]);
 
 // Schema for a single extracted snippet
 const SnippetSchema = z.object({
   id: z.string().uuid().describe('A unique identifier (UUID) for the snippet.'),
   content: z.string().describe('The extracted text snippet.'),
-  cluster: ClusterEnum.describe('The suggested cluster tag for the snippet, categorizing its main theme or purpose.'),
-  zone: ZoneEnum.describe('The suggested zone tag for the snippet, indicating its intended placement or type.'),
-  weight: WeightEnum.describe('The suggested importance level (weight) for the snippet.'),
-  attribution: z.string().describe('The source or author to attribute the snippet to, if any.').optional(),
-  emphasisWords: z.string().describe('A comma-separated list of words within the snippet that should be emphasized.').optional(),
+  cluster: ClusterEnum.describe('The main theme of the snippet.'),
+  zone: ZoneEnum.describe('The content type: anchor (long emotional quote), ticker (short phrase < 15 words), or ghost (atmospheric fragment).'),
+  weight: WeightEnum.describe('The power/distinctiveness level: 0.5, 1.0, 1.5, or 2.0.'),
+  attribution: z.string().describe('The likely source section if detectable.').optional(),
+  emphasis: z.string().describe('Words or phrases within the snippet that carry the most emotional or rhetorical weight.').optional(),
 });
 
 // Input schema for the flow
@@ -64,17 +61,20 @@ const prompt = ai.definePrompt({
   name: 'aiAssistedSnippetExtractionPrompt',
   input: { schema: AiAssistedSnippetExtractionInputSchema },
   output: { schema: AiAssistedSnippetExtractionOutputSchema },
-  prompt: `You are an AI assistant specialized in extracting and tagging content snippets from raw documents. Your goal is to identify meaningful, self-contained text segments that could be used for content creation, and assign relevant tags.
+  prompt: `You are an AI assistant specialized in extracting and tagging content snippets from raw documents. Your goal is to identify meaningful, self-contained text segments and assign relevant tactical tags.
 
-Extract multiple distinct snippets from the provided raw source document. Each snippet should be a concise, coherent piece of information. For each extracted snippet, you must provide the following details in a JSON array format:
+Extract multiple distinct snippets from the provided raw source document. For each extracted snippet, you must provide:
 
--   'id': A unique identifier for the snippet in standard UUID format (e.g., "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx").
--   'content': The exact text of the extracted snippet.
--   'cluster': Assign one of these categories that best describes the snippet's main theme or purpose: 'Introduction', 'Key Takeaways', 'Detailed Analysis', 'Conclusion', 'Examples', 'Quotes', 'Statistics', 'Methodology', 'Background', 'Future Outlook', 'Challenges', 'Solutions', 'Recommendations', 'Call to Action'.
--   'zone': Assign one of these zones indicating its likely use or placement: 'anchor' (core, foundational content), 'ticker' (short, attention-grabbing, or timely content), 'ghost' (supporting, supplementary, or hidden content).
--   'weight': Assign an importance level: 'critical', 'high', 'medium', 'low', 'optional'.
--   'attribution': If the snippet contains a quote or refers to a specific source/person, provide a brief attribution. Otherwise, leave it empty.
--   'emphasisWords': A comma-separated list of 1-3 key words or short phrases within the snippet that should be emphasized. If no words stand out, leave it empty.
+- 'id': A unique identifier for the snippet in standard UUID format.
+- 'content': The exact text of the extracted snippet.
+- 'cluster': Assign one of: 'betrayal', 'surveillance', 'resilience', 'tactical', 'systemic', 'connection'.
+- 'zone': Categorize by length and depth:
+    - 'anchor': Long, emotional, or foundational quotes.
+    - 'ticker': Short, clipped phrases under 15 words.
+    - 'ghost': Atmospheric fragments, barely a full sentence.
+- 'weight': Assign 0.5, 1.0, 1.5, or 2.0 based on how distinctive and powerful the snippet is.
+- 'attribution': The likely source section or context if detectable.
+- 'emphasis': Words or phrases within the snippet that carry the most emotional or rhetorical weight.
 
 Ensure the output is a valid JSON array of snippet objects.
 
@@ -90,8 +90,6 @@ const aiAssistedSnippetExtractionFlow = ai.defineFlow(
   },
   async (input) => {
     const { output } = await prompt(input);
-    // The output schema ensures that 'output' is of type AiAssistedSnippetExtractionOutput (an array of SnippetSchema).
-    // No further manual processing or validation for array type is needed here as Genkit handles it via outputSchema.
     return output!;
   }
 );

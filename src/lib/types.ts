@@ -1,22 +1,14 @@
 export type Cluster =
-  | 'Introduction'
-  | 'Key Takeaways'
-  | 'Detailed Analysis'
-  | 'Conclusion'
-  | 'Examples'
-  | 'Quotes'
-  | 'Statistics'
-  | 'Methodology'
-  | 'Background'
-  | 'Future Outlook'
-  | 'Challenges'
-  | 'Solutions'
-  | 'Recommendations'
-  | 'Call to Action';
+  | 'betrayal'
+  | 'surveillance'
+  | 'resilience'
+  | 'tactical'
+  | 'systemic'
+  | 'connection';
 
 export type Zone = 'anchor' | 'ticker' | 'ghost';
 
-export type Weight = 'critical' | 'high' | 'medium' | 'low' | 'optional';
+export type Weight = 0.5 | 1.0 | 1.5 | 2.0;
 
 export interface Snippet {
   id: string;
@@ -25,7 +17,7 @@ export interface Snippet {
   zone: Zone;
   weight: Weight;
   attribution?: string;
-  emphasisWords?: string;
+  emphasis?: string;
 }
 
 export interface IntelligenceReport {
@@ -42,22 +34,14 @@ export interface IntelligenceReport {
 }
 
 export const CLUSTERS: Cluster[] = [
-  'Introduction',
-  'Key Takeaways',
-  'Detailed Analysis',
-  'Conclusion',
-  'Examples',
-  'Quotes',
-  'Statistics',
-  'Methodology',
-  'Background',
-  'Future Outlook',
-  'Challenges',
-  'Solutions',
-  'Recommendations',
-  'Call to Action',
+  'betrayal',
+  'surveillance',
+  'resilience',
+  'tactical',
+  'systemic',
+  'connection',
 ];
 
 export const ZONES: Zone[] = ['anchor', 'ticker', 'ghost'];
 
-export const WEIGHTS: Weight[] = ['critical', 'high', 'medium', 'low', 'optional'];
+export const WEIGHTS: Weight[] = [0.5, 1.0, 1.5, 2.0];

@@ -80,12 +80,12 @@ export function SnippetEditorCard({ snippet, onUpdate, onDelete }: SnippetEditor
                 value={snippet.cluster}
                 onValueChange={(val) => onUpdate({ ...snippet, cluster: val as any })}
               >
-                <SelectTrigger className="h-9">
+                <SelectTrigger className="h-9 capitalize">
                   <SelectValue placeholder="Select Cluster" />
                 </SelectTrigger>
                 <SelectContent>
                   {CLUSTERS.map((c) => (
-                    <SelectItem key={c} value={c}>{c}</SelectItem>
+                    <SelectItem key={c} value={c} className="capitalize">{c}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -96,12 +96,12 @@ export function SnippetEditorCard({ snippet, onUpdate, onDelete }: SnippetEditor
                 value={snippet.zone}
                 onValueChange={(val) => onUpdate({ ...snippet, zone: val as any })}
               >
-                <SelectTrigger className="h-9">
+                <SelectTrigger className="h-9 capitalize">
                   <SelectValue placeholder="Select Zone" />
                 </SelectTrigger>
                 <SelectContent>
                   {ZONES.map((z) => (
-                    <SelectItem key={z} value={z}>{z.charAt(0).toUpperCase() + z.slice(1)}</SelectItem>
+                    <SelectItem key={z} value={z} className="capitalize">{z}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -112,15 +112,15 @@ export function SnippetEditorCard({ snippet, onUpdate, onDelete }: SnippetEditor
             <div className="space-y-1.5">
               <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Weight</label>
               <Select
-                value={snippet.weight}
-                onValueChange={(val) => onUpdate({ ...snippet, weight: val as any })}
+                value={snippet.weight.toString()}
+                onValueChange={(val) => onUpdate({ ...snippet, weight: parseFloat(val) as any })}
               >
                 <SelectTrigger className="h-9">
                   <SelectValue placeholder="Select Weight" />
                 </SelectTrigger>
                 <SelectContent>
                   {WEIGHTS.map((w) => (
-                    <SelectItem key={w} value={w}>{w.charAt(0).toUpperCase() + w.slice(1)}</SelectItem>
+                    <SelectItem key={w} value={w.toString()}>{w.toFixed(1)}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -131,18 +131,18 @@ export function SnippetEditorCard({ snippet, onUpdate, onDelete }: SnippetEditor
                 value={snippet.attribution || ""}
                 onChange={(e) => onUpdate({ ...snippet, attribution: e.target.value })}
                 className="h-9 text-sm"
-                placeholder="Source or author..."
+                placeholder="Source section..."
               />
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Emphasis Words</label>
+            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Emphasis</label>
             <Input
-              value={snippet.emphasisWords || ""}
-              onChange={(e) => onUpdate({ ...snippet, emphasisWords: e.target.value })}
+              value={snippet.emphasis || ""}
+              onChange={(e) => onUpdate({ ...snippet, emphasis: e.target.value })}
               className="h-9 text-sm"
-              placeholder="e.g. key phrase, data point"
+              placeholder="Emotional or rhetorical weight..."
             />
           </div>
 

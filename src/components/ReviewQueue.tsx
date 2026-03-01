@@ -26,11 +26,11 @@ export function ReviewQueue({ snippets, setSnippets }: ReviewQueueProps) {
     const newSnippet: Snippet = {
       id: uuidv4(),
       content: "",
-      cluster: "Introduction",
+      cluster: "tactical",
       zone: "anchor",
-      weight: "medium",
+      weight: 1.0,
       attribution: "",
-      emphasisWords: ""
+      emphasis: ""
     }
     setSnippets([newSnippet, ...snippets])
   }
