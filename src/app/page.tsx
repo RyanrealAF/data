@@ -1,12 +1,11 @@
 "use client"
 
 import * as React from "react"
-import { RawInputSection } from "@/components/RawInputSection"
 import { ReviewQueue } from "@/components/ReviewQueue"
 import { SourceLibrary } from "@/components/SourceLibrary"
 import { IntelligenceReportView } from "@/components/IntelligenceReportView"
 import { Snippet, IntelligenceReport } from "@/lib/types"
-import { Sparkles, FileText, LayoutGrid, ShieldCheck, Loader2 } from "lucide-react"
+import { Sparkles, FileText, LayoutGrid, ShieldCheck, Loader2, Info } from "lucide-react"
 import { generateIntelligenceReport } from "@/ai/flows/generate-intelligence-report"
 import { extractAndTagSnippets } from "@/ai/flows/ai-assisted-snippet-extraction"
 import { Button } from "@/components/ui/button"
@@ -111,29 +110,26 @@ export default function SnippetForgePage() {
           <div className="lg:col-span-4 space-y-6">
             <SourceLibrary onFileSelected={handleFileSelected} isProcessing={isProcessing} />
             
-            <Tabs defaultValue="manual" className="w-full">
-              <TabsList className="grid w-full grid-cols-2 mb-4">
-                <TabsTrigger value="manual" className="text-xs font-bold uppercase tracking-widest">
-                  <FileText className="h-3 w-3 mr-2" />
-                  Manual
-                </TabsTrigger>
-                <TabsTrigger value="guide" className="text-xs font-bold uppercase tracking-widest">
-                  <LayoutGrid className="h-3 w-3 mr-2" />
-                  Docs
-                </TabsTrigger>
-              </TabsList>
-              <TabsContent value="manual">
-                <RawInputSection onSnippetsExtracted={handleSnippetsExtracted} />
-              </TabsContent>
-              <TabsContent value="guide" className="p-6 bg-white border border-border/50 rounded-2xl shadow-sm">
-                <h3 className="text-sm font-bold text-accent uppercase tracking-widest mb-4">Tactical Manual</h3>
-                <div className="space-y-4 text-sm text-muted-foreground">
-                  <p>1. <strong>Select</strong> a document from the Doctrine Repository above.</p>
-                  <p>2. <strong>Process</strong> using "Run Full Analysis" to generate a deep synthesis and extraction.</p>
-                  <p>3. <strong>Review</strong> findings in the Report tab and edit snippets in the Queue.</p>
+            <div className="p-6 bg-white border border-border/50 rounded-2xl shadow-sm">
+              <div className="flex items-center gap-2 mb-4">
+                <LayoutGrid className="h-4 w-4 text-accent" />
+                <h3 className="text-sm font-bold text-primary uppercase tracking-widest">Tactical Manual</h3>
+              </div>
+              <div className="space-y-4 text-sm text-muted-foreground">
+                <div className="flex gap-3">
+                  <div className="h-5 w-5 rounded-full bg-muted flex items-center justify-center shrink-0 text-[10px] font-bold">1</div>
+                  <p><strong>Select</strong> a document from the Doctrine Repository above.</p>
                 </div>
-              </TabsContent>
-            </Tabs>
+                <div className="flex gap-3">
+                  <div className="h-5 w-5 rounded-full bg-muted flex items-center justify-center shrink-0 text-[10px] font-bold">2</div>
+                  <p><strong>Process</strong> using "Run Full Analysis" to generate a deep synthesis and extraction.</p>
+                </div>
+                <div className="flex gap-3">
+                  <div className="h-5 w-5 rounded-full bg-muted flex items-center justify-center shrink-0 text-[10px] font-bold">3</div>
+                  <p><strong>Review</strong> findings in the Report tab and edit snippets in the Queue.</p>
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Main Area: Report & Queue */}
