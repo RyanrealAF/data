@@ -1,12 +1,15 @@
+
 "use client"
 
 import * as React from "react"
 import { Snippet } from "@/lib/types"
 import { SnippetEditorCard } from "./SnippetEditorCard"
 import { Button } from "@/components/ui/button"
-import { Download, Database, ListChecks, Plus } from "lucide-react"
+import { Download, Database, ListChecks, Plus, Save, Loader2 } from "lucide-react"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { v4 as uuidv4 } from 'uuid'
+import { saveSnippetsToBackend } from "@/app/actions/tagging"
+import { toast } from "@/hooks/use-toast"
 
 interface ReviewQueueProps {
   snippets: Snippet[]
@@ -14,6 +17,8 @@ interface ReviewQueueProps {
 }
 
 export function ReviewQueue({ snippets, setSnippets }: ReviewQueueProps) {
+  const [isSaving, setIsSaving] = React.useState(false)
+
   const handleUpdate = (updatedSnippet: Snippet) => {
     setSnippets((prev) => prev.map((s) => (s.id === updatedSnippet.id ? updatedSnippet : s)))
   }
@@ -46,10 +51,29 @@ export function ReviewQueue({ snippets, setSnippets }: ReviewQueueProps) {
     linkElement.click()
   }
 
-  const handlePushToFirestore = async () => {
-    // This is a placeholder for actual Firebase integration
-    alert(`Pushing ${snippets.length} snippets to Firestore collection '/content_items/'...`)
-    console.log("Firestore Data:", snippets)
+  const handleSaveToBackend = async () => {
+    if (snippets.length === 0) return
+    
+    setIsSaving(true)
+    try {
+      const result = await saveSnippetsToBackend(snippets)
+      if (result.success) {
+        toast({
+          title: "Saved to Backend",
+          description: `Tagging information saved as ${result.filename} in src/data/tagging`
+        })
+      } else {
+        throw new Error(result.error)
+      }
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Save Failed",
+        description: "Could not save tagging information to the backend folder."
+      })
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   return (
@@ -71,14 +95,18 @@ export function ReviewQueue({ snippets, setSnippets }: ReviewQueueProps) {
             Export
           </Button>
           <Button 
-            variant="outline" 
+            variant="default" 
             size="sm" 
-            onClick={handlePushToFirestore}
-            disabled={snippets.length === 0}
-            className="border-primary/20 hover:bg-primary/5"
+            onClick={handleSaveToBackend}
+            disabled={snippets.length === 0 || isSaving}
+            className="bg-primary text-white"
           >
-            <Database className="h-4 w-4 mr-2" />
-            Push
+            {isSaving ? (
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
+              <Save className="h-4 w-4 mr-2" />
+            )}
+            Save to Backend
           </Button>
         </div>
       </div>
