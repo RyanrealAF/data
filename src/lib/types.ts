@@ -28,6 +28,19 @@ export interface Snippet {
   emphasisWords?: string;
 }
 
+export interface IntelligenceReport {
+  title: string;
+  executiveSummary: string;
+  keyFindings: string[];
+  tacticalAnalysis: {
+    tactic: string;
+    description: string;
+    severity: 'High' | 'Medium' | 'Low';
+  }[];
+  recommendedCountermeasures: string[];
+  conclusion: string;
+}
+
 export const CLUSTERS: Cluster[] = [
   'Introduction',
   'Key Takeaways',
