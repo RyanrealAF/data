@@ -5,6 +5,7 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
+import { v4 as uuidv4 } from 'uuid';
 
 const ClusterEnum = z.enum([
   'betrayal',
@@ -24,14 +25,19 @@ const WeightEnum = z.union([
   z.literal(2.0),
 ]);
 
-const SnippetSchema = z.object({
-  id: z.string().uuid().describe('A unique identifier (UUID) for the snippet.'),
+// This schema is what the AI is expected to return
+const AiSnippetResultSchema = z.object({
   content: z.string().describe('The extracted text snippet.'),
   cluster: ClusterEnum.describe('The main theme of the snippet.'),
   zone: ZoneEnum.describe('The content type: anchor (long emotional quote), ticker (short phrase < 15 words), or ghost (atmospheric fragment).'),
   weight: WeightEnum.describe('The power/distinctiveness level: 0.5, 1.0, 1.5, or 2.0.'),
   attribution: z.string().describe('The likely source document or section.').optional(),
   emphasis: z.string().describe('Words or phrases within the snippet that carry the most emotional or rhetorical weight.').optional(),
+});
+
+// This is the final schema including the system-generated ID
+const SnippetSchema = AiSnippetResultSchema.extend({
+  id: z.string().uuid().describe('A unique identifier (UUID) for the snippet.'),
 });
 
 const AiAssistedSnippetExtractionInputSchema = z.object({
@@ -51,12 +57,11 @@ export async function extractAndTagSnippets(
 const prompt = ai.definePrompt({
   name: 'aiAssistedSnippetExtractionPrompt',
   input: { schema: AiAssistedSnippetExtractionInputSchema },
-  output: { schema: AiAssistedSnippetExtractionOutputSchema },
+  output: { schema: z.array(AiSnippetResultSchema) },
   prompt: `You are an AI assistant specialized in extracting tactical content snippets from an intelligence repository. Your goal is to identify the most meaningful, self-contained segments from ACROSS all documents provided.
 
 Analyze the following corpus and extract approximately 15-20 distinct snippets that represent the core pillars of the data. For each snippet:
 
-- 'id': A unique identifier (UUID).
 - 'content': The exact text of the segment.
 - 'cluster': 'betrayal', 'surveillance', 'resilience', 'tactical', 'systemic', 'connection'.
 - 'zone': 
@@ -81,6 +86,13 @@ const aiAssistedSnippetExtractionFlow = ai.defineFlow(
   },
   async (input) => {
     const { output } = await prompt(input);
-    return output!;
+    
+    // Generate valid UUIDs programmatically to avoid AI hallucination errors
+    const snippetsWithIds = (output || []).map(snippet => ({
+      ...snippet,
+      id: uuidv4()
+    }));
+
+    return snippetsWithIds;
   }
 );
