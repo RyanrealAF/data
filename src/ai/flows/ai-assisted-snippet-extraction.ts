@@ -1,16 +1,11 @@
 'use server';
 /**
- * @fileOverview This file defines a Genkit flow for AI-assisted snippet extraction and tagging from raw source documents.
- *
- * - extractAndTagSnippets - A function that leverages AI to extract candidate snippets and suggest initial tags.
- * - AiAssistedSnippetExtractionInput - The input type for the extractAndTagSnippets function.
- * - AiAssistedSnippetExtractionOutput - The return type for the extractAndTagSnippets function.
+ * @fileOverview This file defines a Genkit flow for holistic snippet extraction and tagging from a document corpus.
  */
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 
-// Define the valid options for cluster, zone, and weight tags
 const ClusterEnum = z.enum([
   'betrayal',
   'surveillance',
@@ -29,28 +24,24 @@ const WeightEnum = z.union([
   z.literal(2.0),
 ]);
 
-// Schema for a single extracted snippet
 const SnippetSchema = z.object({
   id: z.string().uuid().describe('A unique identifier (UUID) for the snippet.'),
   content: z.string().describe('The extracted text snippet.'),
   cluster: ClusterEnum.describe('The main theme of the snippet.'),
   zone: ZoneEnum.describe('The content type: anchor (long emotional quote), ticker (short phrase < 15 words), or ghost (atmospheric fragment).'),
   weight: WeightEnum.describe('The power/distinctiveness level: 0.5, 1.0, 1.5, or 2.0.'),
-  attribution: z.string().describe('The likely source section if detectable.').optional(),
+  attribution: z.string().describe('The likely source document or section.').optional(),
   emphasis: z.string().describe('Words or phrases within the snippet that carry the most emotional or rhetorical weight.').optional(),
 });
 
-// Input schema for the flow
 const AiAssistedSnippetExtractionInputSchema = z.object({
-  rawSourceDocument: z.string().describe('The raw source document from which to extract snippets.'),
+  corpusContent: z.string().describe('The full aggregated content of the intelligence library.'),
 });
 export type AiAssistedSnippetExtractionInput = z.infer<typeof AiAssistedSnippetExtractionInputSchema>;
 
-// Output schema for the flow, an array of snippets
-const AiAssistedSnippetExtractionOutputSchema = z.array(SnippetSchema).describe('An array of automatically extracted and tagged candidate snippets.');
+const AiAssistedSnippetExtractionOutputSchema = z.array(SnippetSchema).describe('An array of automatically extracted snippets representing the most critical insights from the entire repository.');
 export type AiAssistedSnippetExtractionOutput = z.infer<typeof AiAssistedSnippetExtractionOutputSchema>;
 
-// Wrapper function for the Genkit flow
 export async function extractAndTagSnippets(
   input: AiAssistedSnippetExtractionInput
 ): Promise<AiAssistedSnippetExtractionOutput> {
@@ -61,25 +52,25 @@ const prompt = ai.definePrompt({
   name: 'aiAssistedSnippetExtractionPrompt',
   input: { schema: AiAssistedSnippetExtractionInputSchema },
   output: { schema: AiAssistedSnippetExtractionOutputSchema },
-  prompt: `You are an AI assistant specialized in extracting and tagging content snippets from raw documents. Your goal is to identify meaningful, self-contained text segments and assign relevant tactical tags.
+  prompt: `You are an AI assistant specialized in extracting tactical content snippets from an intelligence repository. Your goal is to identify the most meaningful, self-contained segments from ACROSS all documents provided.
 
-Extract multiple distinct snippets from the provided raw source document. For each extracted snippet, you must provide:
+Analyze the following corpus and extract approximately 15-20 distinct snippets that represent the core pillars of the data. For each snippet:
 
-- 'id': A unique identifier for the snippet in standard UUID format.
-- 'content': The exact text of the extracted snippet.
-- 'cluster': Assign one of: 'betrayal', 'surveillance', 'resilience', 'tactical', 'systemic', 'connection'.
-- 'zone': Categorize by length and depth:
+- 'id': A unique identifier (UUID).
+- 'content': The exact text of the segment.
+- 'cluster': 'betrayal', 'surveillance', 'resilience', 'tactical', 'systemic', 'connection'.
+- 'zone': 
     - 'anchor': Long, emotional, or foundational quotes.
     - 'ticker': Short, clipped phrases under 15 words.
     - 'ghost': Atmospheric fragments, barely a full sentence.
-- 'weight': Assign 0.5, 1.0, 1.5, or 2.0 based on how distinctive and powerful the snippet is.
-- 'attribution': The likely source section or context if detectable.
-- 'emphasis': Words or phrases within the snippet that carry the most emotional or rhetorical weight.
+- 'weight': 0.5, 1.0, 1.5, or 2.0 based on power and distinctiveness.
+- 'attribution': The specific document title or context if identifiable.
+- 'emphasis': The emotional or rhetorical "heart" of the snippet.
 
-Ensure the output is a valid JSON array of snippet objects.
+CORPUS CONTENT:
+{{{corpusContent}}}
 
-Raw Source Document:
-{{{rawSourceDocument}}}`,
+Prioritize high-signal content that defines the "unseen war" architecture.`,
 });
 
 const aiAssistedSnippetExtractionFlow = ai.defineFlow(

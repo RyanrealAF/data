@@ -5,9 +5,10 @@ import { ReviewQueue } from "@/components/ReviewQueue"
 import { SourceLibrary } from "@/components/SourceLibrary"
 import { IntelligenceReportView } from "@/components/IntelligenceReportView"
 import { Snippet, IntelligenceReport } from "@/lib/types"
-import { Sparkles, FileText, LayoutGrid, ShieldCheck, Loader2, Info } from "lucide-react"
+import { Sparkles, FileText, LayoutGrid, ShieldCheck, Loader2, Library, Network } from "lucide-react"
 import { generateIntelligenceReport } from "@/ai/flows/generate-intelligence-report"
 import { extractAndTagSnippets } from "@/ai/flows/ai-assisted-snippet-extraction"
+import { getAllFilesContent } from "@/app/actions/source-files"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { toast } from "@/hooks/use-toast"
@@ -15,48 +16,49 @@ import { toast } from "@/hooks/use-toast"
 export default function SnippetForgePage() {
   const [snippets, setSnippets] = React.useState<Snippet[]>([])
   const [report, setReport] = React.useState<IntelligenceReport | null>(null)
-  const [activeSource, setActiveSource] = React.useState<{ title: string; content: string } | null>(null)
   const [isProcessing, setIsProcessing] = React.useState(false)
 
   const handleSnippetsExtracted = (newSnippets: Snippet[]) => {
     setSnippets((prev) => [...newSnippets, ...prev])
   }
 
-  const handleFileSelected = (title: string, content: string) => {
-    setActiveSource({ title, content })
-    toast({
-      title: "Document Loaded",
-      description: `Ready to analyze ${title}.`
-    })
-  }
-
-  const runFullAnalysis = async () => {
-    if (!activeSource) return
+  const runGlobalAnalysis = async () => {
     setIsProcessing(true)
     try {
-      // 1. Generate Report
+      // 1. Fetch All Content
+      const corpusContent = await getAllFilesContent()
+      
+      if (!corpusContent) {
+        toast({
+          variant: "destructive",
+          title: "Library Empty",
+          description: "No source documents found in src/data to analyze."
+        })
+        return
+      }
+
+      // 2. Generate Global Report
       const reportResult = await generateIntelligenceReport({
-        documentTitle: activeSource.title,
-        documentContent: activeSource.content
+        corpusContent
       })
       setReport(reportResult as IntelligenceReport)
 
-      // 2. Extract Snippets
+      // 3. Extract Global Snippets
       const snippetResult = await extractAndTagSnippets({ 
-        rawSourceDocument: activeSource.content 
+        corpusContent 
       })
       handleSnippetsExtracted(snippetResult as Snippet[])
 
       toast({
-        title: "Analysis Complete",
-        description: "Intelligence report and snippets generated successfully."
+        title: "Synthesis Complete",
+        description: "Global intelligence report and corpus snippets generated successfully."
       })
     } catch (error) {
-      console.error("Analysis failed:", error)
+      console.error("Global analysis failed:", error)
       toast({
         variant: "destructive",
-        title: "Analysis Failed",
-        description: "There was an error processing the intelligence document."
+        title: "Synthesis Failed",
+        description: "There was an error processing the intelligence library."
       })
     } finally {
       setIsProcessing(false)
@@ -77,26 +79,27 @@ export default function SnippetForgePage() {
             </div>
           </div>
           <div className="flex items-center gap-4">
-            {activeSource && (
-              <div className="hidden lg:flex flex-col items-end">
-                <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-tighter">Current Target</span>
-                <span className="text-sm font-semibold text-primary truncate max-w-[200px]">{activeSource.title}</span>
-              </div>
-            )}
+            <div className="hidden lg:flex flex-col items-end mr-2">
+              <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-tighter">Analysis Mode</span>
+              <span className="text-sm font-semibold text-accent flex items-center gap-1">
+                <Network className="h-3 w-3" />
+                Global Corpus Synthesis
+              </span>
+            </div>
             <Button 
-              disabled={!activeSource || isProcessing}
-              onClick={runFullAnalysis}
+              disabled={isProcessing}
+              onClick={runGlobalAnalysis}
               className="bg-accent hover:bg-accent/90 text-white shadow-md shadow-accent/20"
             >
               {isProcessing ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Analyzing...
+                  Synthesizing Library...
                 </>
               ) : (
                 <>
                   <Sparkles className="mr-2 h-4 w-4" />
-                  Run Full Analysis
+                  Run Global Analysis
                 </>
               )}
             </Button>
@@ -108,7 +111,7 @@ export default function SnippetForgePage() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           {/* Sidebar: Library & Tools */}
           <div className="lg:col-span-4 space-y-6">
-            <SourceLibrary onFileSelected={handleFileSelected} isProcessing={isProcessing} />
+            <SourceLibrary onFileSelected={() => {}} isProcessing={isProcessing} />
             
             <div className="p-6 bg-white border border-border/50 rounded-2xl shadow-sm">
               <div className="flex items-center gap-2 mb-4">
@@ -118,15 +121,15 @@ export default function SnippetForgePage() {
               <div className="space-y-4 text-sm text-muted-foreground">
                 <div className="flex gap-3">
                   <div className="h-5 w-5 rounded-full bg-muted flex items-center justify-center shrink-0 text-[10px] font-bold">1</div>
-                  <p><strong>Select</strong> a document from the Doctrine Repository above.</p>
+                  <p><strong>Review</strong> source documents in the Doctrine Repository above.</p>
                 </div>
                 <div className="flex gap-3">
                   <div className="h-5 w-5 rounded-full bg-muted flex items-center justify-center shrink-0 text-[10px] font-bold">2</div>
-                  <p><strong>Process</strong> using "Run Full Analysis" to generate a deep synthesis and extraction.</p>
+                  <p><strong>Execute</strong> "Run Global Analysis" to synthesize all documents into a unified report.</p>
                 </div>
                 <div className="flex gap-3">
                   <div className="h-5 w-5 rounded-full bg-muted flex items-center justify-center shrink-0 text-[10px] font-bold">3</div>
-                  <p><strong>Review</strong> findings in the Report tab and edit snippets in the Queue.</p>
+                  <p><strong>Examine</strong> patterns, severity scores, and countermeasures in the Report tab.</p>
                 </div>
               </div>
             </div>
@@ -149,19 +152,19 @@ export default function SnippetForgePage() {
               <TabsContent value="report" className="mt-0">
                 {!report && !isProcessing && (
                   <div className="flex flex-col items-center justify-center py-32 text-center bg-white rounded-3xl border border-dashed border-border/50">
-                    <FileText className="h-16 w-12 text-muted-foreground opacity-20 mb-4" />
-                    <h2 className="text-xl font-headline font-semibold text-primary/40">No Analysis Generated</h2>
+                    <Library className="h-16 w-12 text-muted-foreground opacity-20 mb-4" />
+                    <h2 className="text-xl font-headline font-semibold text-primary/40">Repository Analysis Pending</h2>
                     <p className="text-sm text-muted-foreground mt-2 max-w-xs">
-                      Select a source document and run analysis to populate this tactical intelligence briefing.
+                      Initiate Global Analysis to generate a holistic synthesis of the entire repository.
                     </p>
                   </div>
                 )}
                 {isProcessing && (
                   <div className="flex flex-col items-center justify-center py-32 text-center bg-white rounded-3xl border border-border/50 shadow-sm">
                     <Loader2 className="h-12 w-12 text-accent animate-spin mb-4" />
-                    <h2 className="text-xl font-headline font-semibold text-primary">Synthesizing Intelligence</h2>
+                    <h2 className="text-xl font-headline font-semibold text-primary">Cross-Document Synthesis</h2>
                     <p className="text-sm text-muted-foreground mt-2 animate-pulse">
-                      Processing patterns and mapping tactical signatures...
+                      Aggregating archive and mapping global tactical signatures...
                     </p>
                   </div>
                 )}

@@ -1,34 +1,33 @@
 'use server';
 /**
- * @fileOverview Intelligence Report Generation AI agent.
+ * @fileOverview Global Intelligence Synthesis Flow.
  *
- * - generateIntelligenceReport - A function that synthesizes raw documents into a structured report.
+ * - generateIntelligenceReport - Synthesizes multiple source documents into a holistic tactical report.
  */
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 
 const IntelligenceReportInputSchema = z.object({
-  documentTitle: z.string().describe('The name of the source document.'),
-  documentContent: z.string().describe('The full text content of the document to analyze.'),
+  corpusContent: z.string().describe('The aggregated text of all source documents in the library.'),
 });
 
 const TacticalAnalysisSchema = z.object({
   tactic: z.string().describe('Name of the identified tactic.'),
-  description: z.string().describe('Deep dive into how the tactic works.'),
+  description: z.string().describe('Deep dive into how the tactic works across different contexts found in the data.'),
   severity: z.enum(['High', 'Medium', 'Low']).describe('Risk level of the tactic.'),
 });
 
 const IntelligenceReportOutputSchema = z.object({
-  title: z.string().describe('Formal title of the intelligence report.'),
-  executiveSummary: z.string().describe('High-level overview of the findings.'),
-  keyFindings: z.array(z.string()).describe('List of critical observations.'),
-  tacticalAnalysis: z.array(TacticalAnalysisSchema).describe('Detailed breakdown of manipulative mechanics found.'),
-  recommendedCountermeasures: z.array(z.string()).describe('Actionable steps to mitigate the identified threats.'),
-  conclusion: z.string().describe('Final closing statement.'),
+  title: z.string().describe('Formal title of the global intelligence synthesis.'),
+  executiveSummary: z.string().describe('High-level overview of findings across the entire document repository.'),
+  keyFindings: z.array(z.string()).describe('List of critical cross-document observations and recurring patterns.'),
+  tacticalAnalysis: z.array(TacticalAnalysisSchema).describe('Detailed breakdown of manipulative mechanics identified throughout the corpus.'),
+  recommendedCountermeasures: z.array(z.string()).describe('Actionable steps to mitigate threats based on the collective doctrine.'),
+  conclusion: z.string().describe('Final closing statement on the state of the intelligence landscape.'),
 });
 
-export async function generateIntelligenceReport(input: { documentTitle: string; documentContent: string }) {
+export async function generateIntelligenceReport(input: { corpusContent: string }) {
   return generateIntelligenceReportFlow(input);
 }
 
@@ -36,21 +35,21 @@ const prompt = ai.definePrompt({
   name: 'intelligenceReportPrompt',
   input: { schema: IntelligenceReportInputSchema },
   output: { schema: IntelligenceReportOutputSchema },
-  prompt: `You are a Senior Intelligence Analyst specializing in psychosocial operations and counter-intelligence. 
+  prompt: `You are a Senior Intelligence Analyst specializing in cross-document synthesis and psychosocial operations.
 
-Your task is to analyze the provided document and generate a comprehensive Intelligence Report. 
+Your task is to analyze the PROVIDED REPOSITORY of documents as a single cohesive corpus and generate a comprehensive Global Intelligence Report.
 
-Source Document: {{{documentTitle}}}
-Content:
-{{{documentContent}}}
+REPOSITORY CONTENT:
+{{{corpusContent}}}
 
 Your report must:
-1. Synthesize the core psychological doctrines presented.
-2. Identify specific manipulative tactics (e.g., Gaslighting, DARVO, Civilian Weaponization) described or demonstrated.
-3. Assess the impact on the target's cognitive integrity.
-4. Provide clear, actionable countermeasures based on the "Breadcrumb Web" or other defensive protocols mentioned.
+1. Identify RECURRING PATTERNS and psychological doctrines that appear across multiple documents.
+2. Synthesize a unified tactical framework based on the collective evidence.
+3. Identify specific manipulative tactics (e.g., Gaslighting, DARVO, Civilian Weaponization) demonstrated across different case studies or manuals.
+4. Assess the systemic impact on cognitive integrity.
+5. Provide high-level, actionable countermeasures based on the "Breadcrumb Web" and other defensive protocols described throughout the archive.
 
-Format the output as a professional, structured intelligence debrief.`,
+Do not treat documents in isolation. Look for the "Operational Signature" that connects the entire archive. Format the output as a professional, structured intelligence debrief.`,
 });
 
 const generateIntelligenceReportFlow = ai.defineFlow(

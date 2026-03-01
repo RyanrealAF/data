@@ -25,3 +25,19 @@ export async function getFileContent(filename: string) {
     return null;
   }
 }
+
+export async function getAllFilesContent() {
+  try {
+    const files = await getSourceFiles();
+    const contents = await Promise.all(
+      files.map(async (file) => {
+        const content = await getFileContent(file);
+        return `--- DOCUMENT: ${file} ---\n${content}\n`;
+      })
+    );
+    return contents.join('\n\n');
+  } catch (error) {
+    console.error('Error aggregating files:', error);
+    return '';
+  }
+}
